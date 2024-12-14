@@ -2,43 +2,52 @@
 # Playbook to update Linux servers running various distributions
 - name: Update Linux servers
   hosts: all
-  become: true # Run tasks with root privileges
+  become: true             # Enable privilege escalation
+  become_method: sudo      # Use sudo for privilege escalation
+  become_user: root        # Run commands as the root user
 
   tasks:
     # Task to update Debian-based Linux distributions
     - name: Update Debian-based Linux distributions
-      when: ansible_distribution in ['Debian', 'Ubuntu', 'LinuxMint']
       ansible.builtin.apt:
-        upgrade: true
+        upgrade: dist
         update_cache: true
         cache_valid_time: 3600
+      when: ansible_distribution in ['Debian', 'Ubuntu', 'LinuxMint']
 
     # Task to update Arch Linux
     - name: Update Arch-based Linux distributions
-      when: ansible_distribution == 'Arch Linux'
       community.general.pacman:
         update_cache: true
         upgrade: true
+      when: ansible_distribution == 'Arch Linux'
 
     # Task to update CentOS-based Linux distributions
     - name: Update CentOS-based Linux distributions
-      when: ansible_distribution in ['CentOS', 'RedHat', 'OracleLinux', 'Amazon']
       ansible.builtin.yum:
         name: '*'
         state: latest
         update_only: true # Updates but does not install additional packages.
+      when: ansible_distribution in ['CentOS', 'RedHat', 'OracleLinux', 'Amazon']
 
     # Task to update Fedora-based Linux distributions
     - name: Update Fedora-based Linux distributions
-      when: ansible_distribution == 'Fedora'
       ansible.builtin.dnf:
         name: '*'
         state: latest
         update_only: true # Updates but does not install additional packages.
+      when: ansible_distribution == 'Fedora'
 
     # Task to update openSUSE-based Linux distributions
     - name: Update openSUSE-based Linux distributions
-      when: ansible_distribution in ['openSUSE Leap', 'SUSE Linux Enterprise Server']
       community.general.zypper:
         name: '*'
         state: latest
+        update_cache: true
+      when: ansible_distribution.startswith('openSUSE Leap') or 
+            ansible_distribution == 'SUSE Linux Enterprise Server'
+
+    # Debug task to log the distribution being updated
+    - name: Log distribution
+      debug:
+        msg: "Updating {{ ansible_distribution }} on {{ inventory_hostname }}"
