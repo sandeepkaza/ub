@@ -1,5 +1,5 @@
 ---
-# Playbook to update Linux servers running various distributions
+# Playbook to update Linux servers and force a reboot
 - name: Update Linux servers
   hosts: all
   become: true             # Enable privilege escalation
@@ -47,7 +47,8 @@
       when: ansible_distribution.startswith('openSUSE Leap') or 
             ansible_distribution == 'SUSE Linux Enterprise Server'
 
-    # Debug task to log the distribution being updated
-    - name: Log distribution
-      debug:
-        msg: "Updating {{ ansible_distribution }} on {{ inventory_hostname }}"
+    # Force reboot the system
+    - name: Force reboot the server
+      ansible.builtin.reboot:
+        msg: "Forcing reboot after updates"
+        pre_reboot_delay: 10
